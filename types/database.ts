@@ -36,6 +36,105 @@ export interface Database {
         }
         Relationships: []
       }
+      channels: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_items: {
+        Row: {
+          id: string
+          title: string
+          category: string
+          price: number
+          image_url: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          category: string
+          price?: number
+          image_url?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          category?: string
+          price?: number
+          image_url?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          id: string
+          channel_id: string
+          sender_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          channel_id: string
+          sender_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          channel_id?: string
+          sender_id?: string
+          content?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: 'liked' | 'commented' | 'mentioned' | 'followed'
+          content: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: 'liked' | 'commented' | 'mentioned' | 'followed'
+          content: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: 'liked' | 'commented' | 'mentioned' | 'followed'
+          content?: string
+          read?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           id: string
@@ -43,6 +142,8 @@ export interface Database {
           title: string
           description: string | null
           status: "active" | "paused" | "completed"
+          due_date: string | null
+          member_count: number
           created_at: string
           updated_at: string
         }
@@ -52,6 +153,8 @@ export interface Database {
           title: string
           description?: string | null
           status?: "active" | "paused" | "completed"
+          due_date?: string | null
+          member_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -61,8 +164,67 @@ export interface Database {
           title?: string
           description?: string | null
           status?: "active" | "paused" | "completed"
+          due_date?: string | null
+          member_count?: number
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          id: string
+          project_id: string
+          title: string
+          status: 'todo' | 'in-progress' | 'done'
+          assignee_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title: string
+          status?: 'todo' | 'in-progress' | 'done'
+          assignee_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string
+          status?: 'todo' | 'in-progress' | 'done'
+          assignee_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          method: string
+          status: 'paid' | 'pending' | 'failed'
+          fees: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          method?: string
+          status?: 'paid' | 'pending' | 'failed'
+          fees?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          method?: string
+          status?: 'paid' | 'pending' | 'failed'
+          fees?: number
+          created_at?: string
         }
         Relationships: []
       }

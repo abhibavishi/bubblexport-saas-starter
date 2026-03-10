@@ -136,3 +136,90 @@ drop trigger if exists set_subscriptions_updated_at on public.subscriptions;
 create trigger set_subscriptions_updated_at
   before update on public.subscriptions
   for each row execute procedure public.set_updated_at();
+
+-- ============================================================
+-- Premium Dashboard Extension Tables
+-- ============================================================
+
+-- Chat channels
+create table public.channels (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  created_at timestamptz default now()
+);
+
+-- Chat messages (Realtime enabled)
+create table public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  channel_id uuid not null references public.channels(id) on delete cascade,
+  sender_id  uuid not null references public.profiles(id) on delete cascade,
+  content    text not null,
+  created_at timestamptz default now()
+);
+
+alter table public.messages enable row level security;
+create policy "Users can read all messages" on public.messages for select using (auth.uid() is not null);
+create policy "Users can insert own messages" on public.messages for insert with check (auth.uid() = sender_id);
+
+-- Enable Realtime for messages
+alter publication supabase_realtime add table public.messages;
+
+-- Notifications
+create table public.notifications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  type       text not null check (type in ('liked','commented','mentioned','followed')),
+  content    text not null,
+  read       boolean not null default false,
+  created_at timestamptz default now()
+);
+
+alter table public.notifications enable row level security;
+create policy "Users manage own notifications" on public.notifications for all using (auth.uid() = user_id);
+
+-- Marketplace items (public read-only)
+create table public.marketplace_items (
+  id          uuid primary key default gen_random_uuid(),
+  title       text not null,
+  category    text not null,
+  price       numeric(10,2) not null default 0,
+  image_url   text,
+  description text,
+  created_at  timestamptz default now()
+);
+
+alter table public.marketplace_items enable row level security;
+create policy "Anyone can read marketplace" on public.marketplace_items for select using (true);
+
+-- Transactions (Wallet)
+create table public.transactions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  amount     numeric(10,2) not null,
+  method     text not null default 'stripe',
+  status     text not null default 'paid' check (status in ('paid','pending','failed')),
+  fees       numeric(10,2) not null default 0,
+  created_at timestamptz default now()
+);
+
+alter table public.transactions enable row level security;
+create policy "Users read own transactions" on public.transactions for select using (auth.uid() = user_id);
+
+-- Projects extension
+alter table public.projects add column if not exists due_date timestamptz;
+alter table public.projects add column if not exists member_count integer not null default 1;
+
+-- Tasks
+create table public.tasks (
+  id          uuid primary key default gen_random_uuid(),
+  project_id  uuid not null references public.projects(id) on delete cascade,
+  title       text not null,
+  status      text not null default 'todo' check (status in ('todo','in-progress','done')),
+  assignee_id uuid references public.profiles(id),
+  created_at  timestamptz default now()
+);
+
+alter table public.tasks enable row level security;
+create policy "Users manage tasks in own projects"
+  on public.tasks for all
+  using (exists (select 1 from public.projects where id = project_id and owner_id = auth.uid()));
