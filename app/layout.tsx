@@ -1,12 +1,10 @@
 import type { Metadata } from "next"
-import { Inter, Geist } from "next/font/google"
+import { Geist } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers"
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "SaaS Starter | Built with BubbleExport",
@@ -24,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
-      <body className={inter.className} suppressHydrationWarning>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

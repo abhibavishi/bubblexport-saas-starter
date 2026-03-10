@@ -1,14 +1,19 @@
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 
+let _stripe: Stripe | null = null
+
 function getStripe(): Stripe {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY environment variable is not set")
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY environment variable is not set")
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-02-24.acacia",
+      typescript: true,
+    })
   }
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-02-24.acacia",
-    typescript: true,
-  })
+  return _stripe
 }
 
 export const stripe = new Proxy({} as Stripe, {
