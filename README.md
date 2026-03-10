@@ -1,6 +1,10 @@
 # BubbleExport SaaS Starter
 
-A production-ready SaaS admin dashboard template built with **Next.js 15**, **Supabase**, and **Stripe**. This template was rebuilt from the most popular Bubble.io SaaS template (48.7k installs) to demonstrate what a real Bubble.io migration looks like in code.
+A production-ready SaaS admin dashboard template built with **Next.js 16**, **Supabase**, and **Stripe**. This template was rebuilt from the most popular Bubble.io SaaS template (48.7k installs) to demonstrate what a real Bubble.io migration looks like in code.
+
+**[Live Demo →](https://bubblexport-saas-starter.vercel.app)** · [Template Showcase](https://bubbleexport.com/templates/saas-admin)
+
+> **Zero-config preview:** The live demo runs with `NEXT_PUBLIC_DEMO_MODE=true` — no Supabase or Stripe credentials required.
 
 ---
 
@@ -8,7 +12,7 @@ A production-ready SaaS admin dashboard template built with **Next.js 15**, **Su
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS + shadcn/ui |
 | Database | Supabase (PostgreSQL) |
