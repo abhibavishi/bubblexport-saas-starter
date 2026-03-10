@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Hash } from "lucide-react"
 
@@ -21,7 +22,7 @@ export function ConversationList({ channels, activeChannelId }: ConversationList
         {channels.map((channel) => {
           const isActive = channel.id === activeChannelId
           return (
-            <a
+            <Link
               key={channel.id}
               href={`/chat?channel=${channel.id}`}
               className={cn(
@@ -33,7 +34,7 @@ export function ConversationList({ channels, activeChannelId }: ConversationList
             >
               <Hash className="h-3.5 w-3.5 shrink-0" />
               {channel.name}
-            </a>
+            </Link>
           )
         })}
       </nav>

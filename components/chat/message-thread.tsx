@@ -3,15 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { subscribeToMessages } from "@/lib/realtime"
+import type { Message } from "@/lib/realtime"
 import { cn } from "@/lib/utils"
-
-interface Message {
-  id: string
-  channel_id: string
-  sender_id: string
-  content: string
-  created_at: string
-}
 
 interface MessageThreadProps {
   channelId: string
@@ -24,11 +17,12 @@ export function MessageThread({ channelId, initialMessages, currentUserId }: Mes
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    setMessages(initialMessages)
     const unsubscribe = subscribeToMessages(channelId, (newMessage) => {
       setMessages((prev) => [...prev, newMessage])
     })
     return unsubscribe
-  }, [channelId])
+  }, [channelId, initialMessages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
