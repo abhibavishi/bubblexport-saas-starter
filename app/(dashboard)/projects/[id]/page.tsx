@@ -1,147 +1,75 @@
 import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { DashboardHeader } from "@/components/layout/dashboard-header"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
-interface PageProps {
-  params: Promise<{ id: string }>
-}
+const COLUMNS = [
+  { status: "todo",        label: "Todo" },
+  { status: "in-progress", label: "In Progress" },
+  { status: "done",        label: "Done" },
+] as const
 
-export default async function ProjectDetailPage({ params }: PageProps) {
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: project, error } = await supabase
+  const { data: project } = await supabase
     .from("projects")
-    .select("*")
+    .select("id, title, description, status")
     .eq("id", id)
     .eq("owner_id", user.id)
     .single()
 
-  if (error || !project) notFound()
+  if (!project) notFound()
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url")
-    .eq("id", user.id)
-    .single()
-
-  async function updateProject(formData: FormData) {
-    "use server"
-    const supabase = await createClient()
-
-    const title = formData.get("title") as string
-    const description = formData.get("description") as string
-    const status = formData.get("status") as "active" | "paused" | "completed"
-
-    const { error } = await supabase
-      .from("projects")
-      .update({ title, description: description || null, status })
-      .eq("id", id)
-
-    if (!error) {
-      redirect("/projects")
-    }
-  }
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id, title, status, created_at")
+    .eq("project_id", id)
+    .order("created_at", { ascending: true })
 
   return (
-    <div className="flex flex-col">
-      <DashboardHeader
-        title="Edit Project"
-        userEmail={user.email}
-        userFullName={profile?.full_name}
-        userAvatarUrl={profile?.avatar_url}
-      />
-
-      <div className="flex-1 p-6">
-        <div className="mb-6">
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to projects
-          </Link>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{project.title}</h1>
+          {project.description && (
+            <p className="text-muted-foreground text-sm">{project.description}</p>
+          )}
         </div>
+        <Badge variant="secondary" className="capitalize ml-auto">{project.status}</Badge>
+      </div>
 
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle>Project details</CardTitle>
-            <CardDescription>
-              Update the title, description, and status of your project.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={updateProject} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  defaultValue={project.title}
-                  required
-                />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {COLUMNS.map((col) => {
+          const colTasks = (tasks ?? []).filter((t) => t.status === col.status)
+          return (
+            <div key={col.status} className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-sm font-semibold">{col.label}</span>
+                <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px]">
+                  {colTasks.length}
+                </Badge>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  defaultValue={project.description ?? ""}
-                  rows={4}
-                  placeholder="Describe what this project is about…"
-                />
+              <div className="space-y-2 min-h-[120px]">
+                {colTasks.map((task) => (
+                  <Card key={task.id} className="cursor-default">
+                    <CardContent className="p-3">
+                      <p className="text-sm">{task.title}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+                {colTasks.length === 0 && (
+                  <div className="flex items-center justify-center rounded-lg border border-dashed h-[80px]">
+                    <span className="text-xs text-muted-foreground">No tasks</span>
+                  </div>
+                )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue={project.status}>
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button type="submit">Save changes</Button>
-                <Button variant="outline" asChild>
-                  <Link href="/projects">Cancel</Link>
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
