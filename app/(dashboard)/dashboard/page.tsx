@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { Users, FolderOpen, TrendingUp, TrendingDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { DashboardHeader } from "@/components/layout/dashboard-header"
 import { MrrChart } from "@/components/dashboard/mrr-chart"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -73,23 +72,10 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login")
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url")
-    .eq("id", user.id)
-    .single()
-
   const { projectCount, userCount } = await getStats(user.id)
 
   return (
     <div className="flex flex-col">
-      <DashboardHeader
-        title="Dashboard"
-        userEmail={user.email}
-        userFullName={profile?.full_name}
-        userAvatarUrl={profile?.avatar_url}
-      />
-
       <div className="flex-1 space-y-6 p-6">
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
