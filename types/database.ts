@@ -34,6 +34,7 @@ export interface Database {
           stripe_customer_id?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
       projects: {
         Row: {
@@ -63,6 +64,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -92,10 +94,11 @@ export interface Database {
           current_period_end?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
     }
-    Views: Record<string, never>
-    Functions: Record<string, never>
+    Views: {}
+    Functions: {}
     Enums: {
       user_role: "admin" | "member"
       project_status: "active" | "paused" | "completed"
