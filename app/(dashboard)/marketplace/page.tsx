@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ItemCard } from "@/components/marketplace/item-card"
@@ -64,9 +65,9 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
       {/* Category tabs */}
       <div className="flex gap-1 flex-wrap">
         {categories.map((cat) => (
-          <a
+          <Link
             key={cat}
-            href={cat === "All" ? "/marketplace" : `/marketplace?category=${cat}${q ? `&q=${q}` : ""}`}
+            href={cat === "All" ? "/marketplace" : `/marketplace?category=${encodeURIComponent(cat)}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium transition-colors ${
               activeCategory === cat
                 ? "bg-primary text-primary-foreground"
@@ -74,7 +75,7 @@ export default async function MarketplacePage({ searchParams }: MarketplacePageP
             }`}
           >
             {cat}
-          </a>
+          </Link>
         ))}
       </div>
 
