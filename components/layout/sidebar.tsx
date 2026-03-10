@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -14,15 +15,31 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 import { createClient } from "@/lib/supabase/client"
 
-const navItems = [
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  badge?: number
+}
+
+const navItems: NavItem[] = [
   { href: "/dashboard",      label: "Overview",       icon: LayoutDashboard },
-  { href: "/chat",           label: "Chat",            icon: MessageSquare,  badge: 3 },
-  { href: "/notifications",  label: "Notifications",   icon: Bell,           badge: 9 },
+  { href: "/chat",           label: "Chat",            icon: MessageSquare,  badge: 3 },  // TODO: replace with live unread count
+  { href: "/notifications",  label: "Notifications",   icon: Bell,           badge: 9 },  // TODO: replace with live unread count
   { href: "/marketplace",    label: "Marketplace",     icon: Store },
   { href: "/wallet",         label: "Wallet",          icon: Wallet },
   { href: "/projects",       label: "Projects",        icon: FolderOpen },
   { href: "/components",     label: "Components",      icon: Blocks },
 ]
+
+function navLinkClass(isActive: boolean) {
+  return cn(
+    "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+    isActive
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary pl-[10px]" // pl-[10px] = px-3(12px) - border-l-2(2px)
+      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  )
+}
 
 interface SidebarProps {
   userEmail?: string | null
@@ -33,20 +50,20 @@ interface SidebarProps {
 export function Sidebar({ userEmail, userAvatarUrl, userFullName }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
 
   const initials = userFullName
     ? userFullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : userEmail?.slice(0, 2).toUpperCase() ?? "??"
 
   async function handleSignOut() {
+    const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/login")
     router.refresh()
+    router.push("/login")
   }
 
   return (
-    <aside className="flex h-screen w-[220px] flex-col border-r bg-sidebar">
+    <aside aria-label="Sidebar" className="flex h-screen w-[220px] flex-col border-r bg-sidebar">
       {/* Logo */}
       <div className="flex h-14 items-center px-4 border-b border-sidebar-border">
         <Link href="/dashboard" className="flex items-center gap-2">
@@ -58,7 +75,7 @@ export function Sidebar({ userEmail, userAvatarUrl, userFullName }: SidebarProps
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Main" className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
@@ -66,12 +83,8 @@ export function Sidebar({ userEmail, userAvatarUrl, userFullName }: SidebarProps
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary pl-[10px]"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
+              aria-current={isActive ? "page" : undefined}
+              className={navLinkClass(isActive)}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
@@ -88,12 +101,8 @@ export function Sidebar({ userEmail, userAvatarUrl, userFullName }: SidebarProps
 
         <Link
           href="/settings"
-          className={cn(
-            "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-            pathname === "/settings"
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-primary pl-[10px]"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          )}
+          aria-current={pathname === "/settings" ? "page" : undefined}
+          className={navLinkClass(pathname === "/settings")}
         >
           <Settings className="h-4 w-4 shrink-0" />
           Settings
@@ -104,7 +113,7 @@ export function Sidebar({ userEmail, userAvatarUrl, userFullName }: SidebarProps
       <div className="border-t border-sidebar-border p-3 space-y-2">
         <div className="flex items-center gap-2.5 px-1">
           <Avatar className="h-7 w-7">
-            {userAvatarUrl && <AvatarImage src={userAvatarUrl} />}
+            {userAvatarUrl && <AvatarImage src={userAvatarUrl} alt={userFullName ?? "User avatar"} />}
             <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
