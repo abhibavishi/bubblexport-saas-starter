@@ -18,23 +18,32 @@ import { Plus } from "lucide-react"
 export function NewProjectDialog({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
     const fd = new FormData(e.currentTarget)
     const supabase = createClient()
-    await supabase.from("projects").insert({
-      owner_id: userId,
-      title:       fd.get("title") as string,
-      description: (fd.get("description") as string) || null,
-      status:      ((fd.get("status") as string) || "active") as "active" | "paused" | "completed",
-      due_date:    (fd.get("due_date") as string) || null,
-    })
-    setLoading(false)
-    setOpen(false)
-    router.refresh()
+    try {
+      const { error: insertError } = await supabase.from("projects").insert({
+        owner_id: userId,
+        title:       fd.get("title") as string,
+        description: (fd.get("description") as string) || null,
+        status:      ((fd.get("status") as string) || "active") as "active" | "paused" | "completed",
+        due_date:    (fd.get("due_date") as string) || null,
+      })
+      if (insertError) {
+        setError("Failed to create project. Please try again.")
+        return
+      }
+      setOpen(false)
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -74,6 +83,9 @@ export function NewProjectDialog({ userId }: { userId: string }) {
               <Input id="due_date" name="due_date" type="date" />
             </div>
           </div>
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creating…" : "Create Project"}
           </Button>
